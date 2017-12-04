@@ -19,4 +19,4 @@ A set of scripts to make OpenVPN administration easier.
 
 ## Bugs:
 
-* Missing TLS cert validation check to catch authentication attempts with revoked certs.
+* Missing TLS cert validation check to catch authentication attempts with revoked certs (tls-verify)
