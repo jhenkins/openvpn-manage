@@ -1,0 +1,231 @@
+#!/bin/bash
+
+#===============================================================================
+#         FILE: vpn-manage
+#
+#        USAGE: ./vpn-manage arg1 [arg2]
+#
+#  DESCRIPTION: A wrapper script for OpenVPN's easy-rsa tool
+#
+#      OPTIONS: ---
+# REQUIREMENTS: ---
+#         BUGS: ---
+#        NOTES: This is the first version where we attempt to have a more generic
+#               tool, with all unique variables in a configuration file rather
+#               having to hack the script for each environment.
+#       AUTHOR: Jan Henkins <jan.henkins@gmail.com> 
+#      LICENSE: GPL
+#      VERSION: 2.0 or newer
+#===============================================================================
+
+# Find where we are, and read configuration file. Exit with error if conf
+# does not exist.
+WORKINGDIR=`pwd`
+if [ ! -f $WORKINGDIR/vpn-manage.conf ]
+then
+      echo ""
+      echo "WARNING:"
+      echo "========"
+      echo ""
+      echo "A valid onfiguration file does not exist, installing a generic one."
+      echo "Please ensure that you edit $WORKINGDIR/vpn-manage.conf and populate it"
+      echo "with sane values."
+      exit 1
+fi
+source $WORKINGDIR/vpn-manage.conf
+
+## Check if the configuration file is properly configured
+if [ "$UNCONFIGURED" = 1 ]
+then
+        echo ""
+        echo "WARNING:"
+        echo ""
+        echo "Configuration file exists, but is unconfigured. Please edit,"
+        echo "read the comments and configure properly."
+        exit 1
+fi
+
+# Other useful vars
+CASEV=$1
+NAME=$2
+CRL=crl.pem
+RT=revoke-test.pem
+SDIR=$WORKINGDIR
+OVPNDIR="/etc/openvpn"
+
+# Ensure $ZIPDIR exists
+mkdir -p $ZIPDIR
+
+cd $SDIR
+
+# Test Arguments
+test_client() {
+        if test ${#NAME} -lt 1
+        then
+                echo "Usage: vpn-manage $CASEV <client name>";
+                exit 1
+        fi
+}
+
+# Creating our key
+create_key() {
+	cd $SDIR
+	./build-key $NAME
+
+}
+
+# Revoking our key
+revoke_key() {
+	cd $SDIR
+	./revoke-full $NAME
+	# Copy new crl.pem to where OpenVPN can see it.
+	cp -f $KEY_DIR/$CRL $OVPNDIR
+}
+
+# Edit Config file per client
+edit_conf () {
+        cat $CFLIN | sed s/$CNAME/$NAME/g > $KEY_DIR/$LINFILE
+	sed -i "s/$ENAME/$MYENV/g" $KEY_DIR/$LINFILE
+	sed -i "s/$RNAME/$MYREMOTE/g" $KEY_DIR/$LINFILE
+        cat $CFWIN | sed s/$CNAME/$NAME/g > $KEY_DIR/$WINFILE
+	sed -i "s/$ENAME/$MYENV/g" $KEY_DIR/$WINFILE
+	sed -i "s/$RNAME/$MYREMOTE/g" $KEY_DIR/$WINFILE
+	#cp -f $VPNGUI $KEY_DIR
+	#cp -f $MACGUI $KEY_DIR
+}
+
+# Making the client packages
+create_pkg () {
+        cd $KEY_DIR
+	mkdir -p $KEY_DIR/$MYENV
+	cp ca.crt $NAME.crt $NAME.key $MYENV/
+        zip -qr $NAME-$MYENV.zip $WINFILE $LINFILE *.exe *.dmg $MYENV/
+        mv $NAME-$MYENV.zip $ZIPDIR
+	rm -f $KEY_DIR/*.exe
+	rm -f $KEY_DIR/*.dmg
+	rm -rf $KEY_DIR/$MYENV/
+}
+
+# Report active/revoked keys - we could possibly make this a bit more sophisticated, but for now this will do.
+# Note: OpenVPN changed a bit how it formats the index.txt file, so in order to stay backwards and forwards
+# compatible, we have to keep the report foratting a lot more generic (and unfortunately less "pretty").
+report_client () {
+	echo "Active keys"
+	echo "==========="
+	echo ""
+	for i in `grep "^V" keys/index.txt`
+	do
+		# echo $i | grep CN
+		echo $i | grep CN | awk 'BEGIN {FS= "/"} { printf("%s\n,%s\n,%s\n,%s\n,%s\n,%s\n,%s\n,\n", $1, $2, $3, $4, $5, $6, $7) }' | grep CN | sed 's/,//g' | sed 's/CN=//g'
+
+	done
+	echo ""
+	echo "Revoked keys"
+	echo "============"
+	echo ""
+	for i in `grep "^R" keys/index.txt`
+	do
+		# echo $i | grep CN
+		echo $i | grep CN | awk 'BEGIN {FS= "/"} { printf("%s\n,%s\n,%s\n,%s\n,%s\n,%s\n,%s\n,\n", $1, $2, $3, $4, $5, $6, $7) }' | grep CN | sed 's/,//g' | sed 's/CN=//g'
+	done
+	echo ""
+}
+
+# Initialise the server from scratch
+
+## Process:
+## mkdir -p client-pkg
+## mkdir -p config
+## mkdir -p keys
+## 
+## . vars
+## ./clean-all 
+## ./build-ca 
+## 
+## ./build-inter inter  <- Optional!
+## 
+## ./build-dh 
+## 
+## ./build-key-server server
+
+initialise_server () {
+        if test ${#NAME} -lt 1
+        then
+                echo "Usage: vpn-manage $CASEV <yesreally|backupfirst>";
+                exit 1
+        fi
+
+        if test ${NAME} == "yesreally"
+        then
+                echo "OK, initialise from scratch!";
+		echo "Be warned: This will delete all existing keys with no backups made!"
+		echo ""
+                echo "Press <Ctrl>+<c> to exit, or any key to continue...";
+        fi
+
+        if test ${NAME} == "backupfirst"
+        then
+                echo "Initialising, but making a backup first";
+		echo ""
+                echo "Press <Ctrl>+<c> to exit, or any key to continue...";
+        fi
+	
+
+}
+
+## All functions above this line!
+
+## See how we were called
+case "$1" in
+
+create)
+test_client
+. ./vars
+create_key
+edit_conf
+create_pkg
+;;
+
+repackage)
+test_client
+. ./vars
+edit_conf
+create_pkg
+;;
+
+revoke)
+test_client
+. ./vars
+revoke_key
+;;
+
+report)
+. ./vars > /dev/null # Do this quietly, we don't want debugging info
+report_client
+;;
+
+initialise)
+. ./vars > /dev/null
+initialise_server
+;;
+
+*)
+	echo ""
+	echo "Usage scenarios for vpn-manage"
+	echo "=============================="
+	echo ""
+	echo "Creating/revoking VPN keys:"
+        echo "# vpn-manage {create|revoke|repackage} <keyname>"
+	echo ""
+	echo "Reporting on active and revoked keys:"
+        echo "# vpn-manage report"
+	echo ""
+	echo "Initialise the server from scratch:"
+	echo "# vpn-manage initialise (and then read the output for further guidiance)"
+	echo ""
+        exit 1
+        ;;
+esac
+
+exit 0
+

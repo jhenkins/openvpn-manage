@@ -1,0 +1,40 @@
+#!/bin/bash
+
+#===============================================================================
+#         FILE: report
+#
+#        USAGE: ./report arg1
+#
+#  DESCRIPTION: An OpenVPN client key reporting tool
+#
+#      OPTIONS: ---
+# REQUIREMENTS: ---
+#         BUGS: ---
+#        NOTES: ---
+#       AUTHOR: Jan Henkins <jan.henkins@gmail.com> 
+#      LICENSE: GPL
+#      VERSION: 2 or newer
+#===============================================================================
+
+echo "Active keys"
+echo "==========="
+echo ""
+for i in `grep "^V" keys/index.txt`
+do
+	#echo $i | grep CN | cut -f 3 -d "/" | sed s/CN=//g
+	echo $i | grep CN | awk 'BEGIN {FS= "/"} { printf("%s\n,%s\n,%s\n,%s\n,%s\n,%s\n,%s\n,\n", $1, $2, $3, $4, $5, $6, $7) }' | grep CN | sed 's/,//g' | sed 's/CN=//g'
+	# echo $i | grep CN
+done
+
+echo ""
+echo "Revoked keys"
+echo "============"
+echo ""
+for i in `grep "^R" keys/index.txt`
+do
+	#echo $i | grep CN | cut -f 3 -d "/" | sed s/CN=//g
+	echo $i | grep CN | awk 'BEGIN {FS= "/"} { printf("%s\n,%s\n,%s\n,%s\n,%s\n,%s\n,%s\n,\n", $1, $2, $3, $4, $5, $6, $7) }' | grep CN | sed 's/,//g' | sed 's/CN=//g'
+	# echo $i | grep CN
+	# echo $i
+done
+echo ""
