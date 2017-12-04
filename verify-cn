@@ -1,0 +1,37 @@
+#!/bin/sh
+
+
+#    verify-cn
+#    """""""""
+#
+#    This script checks if the peer is in the allowed
+#    user list by checking the CN (common name) of the
+#    X509 certificate against a provided text file.
+#
+#    For example in OpenVPN, you could use the directive
+#    (as one line):
+#
+#    tls-verify "/usr/local/sbin/verify-cn
+#                /etc/openvpn/userlist.txt"
+#
+#    This would cause the connection to be dropped unless
+#    the client common name is within the userlist.txt.
+
+
+[ $# -eq 3 ] || { echo usage: $0 userfile certificate_depth X509_NAME_oneline ; exit 255 ; }
+
+# $2 -> certificate_depth
+if [ $2 -eq 0 ] ; then
+        # $3 -> X509_NAME_oneline
+        # $1 -> cn we are looking for
+	MYCN=`grep $3 $1`
+        if [ $MYCN ]
+	then
+		exit 0
+	else
+		logger -i "Revoked key trying to access VPN: $3"
+	fi
+        exit 1
+fi
+
+exit 0
