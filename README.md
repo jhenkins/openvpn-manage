@@ -1,5 +1,5 @@
 # openvpn-manage
-A set of scripts to make OpenVPN administration easier.
+A set of scripts to make OpenVPN administration on Linux a bit easier.
 
 ## Current features:
 
@@ -12,11 +12,10 @@ A set of scripts to make OpenVPN administration easier.
 ## Needed enhancements:
 
 * Make script so that it can be called from system path
-* Create proper docs (man page?)
-* Create a Makefile
 * Initialise a new OpenVPN server from scratch
 * Re-initialise an OpenVPN server, backing up old config and keys.
 
-## Bugs:
+## Possible enhancements:
 
-* Missing TLS cert validation check to catch authentication attempts with revoked certs (tls-verify)
+* Make it possible to run this on *BSD
+
