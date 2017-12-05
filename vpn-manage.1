@@ -1,0 +1,30 @@
+.\" Manpage for vpn-manage.
+.\" Contact jan.henkins@gmail.com to correct errors or typos.
+.TH man 1 "05 December 2017" "0.1" "vpn-manage man page"
+.SH NAME
+vpn-manage \- A management tool for OpenVPN with easy-rsa
+.SH SYNOPSIS
+vpn-manage [command] [arg1]
+.SH DESCRIPTION
+vpn-manage is a management script to ease user and certificate management for OpenVPN with easy-rsa.
+.SH OPTIONS
+The following sub-commands are currently supported:
+
+* create	- Create a new set of client certificates
+
+* revoke	- Revoke a set of client certificates
+
+* repackage	- Create a new ZIP archive from an existing set of client certificates
+
+* report	- List all active and revoked certificates
+
+.SH USAGE
+vpn-manage [command] [arg1]
+
+
+.SH SEE ALSO
+vpn-manage(1)
+.SH BUGS
+No known bugs.
+.SH AUTHOR
+Jan Henkins (jan.henkins@gmail.com)

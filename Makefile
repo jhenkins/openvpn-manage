@@ -8,6 +8,7 @@ docs=/usr/share
 mypwd=`pwd`
 
 install: 
+	mkdir -p /etc/openvpn/easy-rsa
 	mkdir -p $(docs)/doc/vpn-manage
 	install -m 0755 vpn-manage $(prefix)/bin/
 	install -m 0644 vpn-manage.1 $(docs)/man/man1/
