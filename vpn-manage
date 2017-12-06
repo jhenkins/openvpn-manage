@@ -20,6 +20,7 @@
 
 # Find where we are, and read configuration file. Exit with error if conf
 # does not exist.
+CONFDIR=/etc/vpn-manage
 WORKINGDIR=`pwd`
 if [ ! -f $WORKINGDIR/vpn-manage.conf ]
 then
@@ -33,6 +34,8 @@ then
       exit 1
 fi
 source $WORKINGDIR/vpn-manage.conf
+source $CONFDIR/vpn-manage.conf
+source $CONFDIR/vpn-manage.functions
 
 ## Check if the configuration file is properly configured
 if [ "$UNCONFIGURED" = 1 ]
