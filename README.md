@@ -22,3 +22,7 @@ A set of scripts to make OpenVPN administration on Linux a bit easier.
 * Make it possible to run this on *BSD
 * Do something more useful with the client-config-dir feature (routes, static IP allocations, etc.)
 
+## Dependencies:
+
+* A platform supported by OpenVPN and BASH
+* A recent version of easy-rsa
